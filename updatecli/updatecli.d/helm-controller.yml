@@ -1,0 +1,59 @@
+# This updatecli policy automatically updates the helm-controller dependency
+# when there is an upstream tag released at github.com/k3s-io/helm-controller
+# To test this:
+#   have "UPDATECLI_GITHUB_ACTOR" env set to your github username
+#   have "UPDATECLI_GITHUB_TOKEN" env set to your github token
+#   have the latest version of updatecli installed
+#   'updatecli diff -v updatecli/values.yaml -c updatecli/updatecli.d/helm-controller.yml'
+---
+name: "Update helm-controller dependency"
+
+scms:
+  rke2:
+    kind: "github"
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      username: "{{ requiredEnv .github.username }}"
+      token: '{{ requiredEnv .github.token }}'
+      owner: rancher
+      repository: rke2
+      branch: master
+
+sources:
+  helm-controller:
+    name: "Get latest helm-controller version"
+    kind: "gittag"
+    spec:
+      url: "https://github.com/k3s-io/helm-controller.git"
+      versionfilter:
+        kind: "semver"
+
+conditions:
+  helm-controller-tag-exists:
+    name: "Check if helm-controller tag exists"
+    kind: "gittag"
+    sourceid: helm-controller
+    spec:
+      url: "https://github.com/k3s-io/helm-controller.git"
+
+targets:
+  update-go-mod:
+    name: "Update helm-controller version in go.mod"
+    kind: "golang/gomod"
+    scmid: "rke2"
+    sourceid: helm-controller
+    spec:
+      file: "go.mod"
+      module: "github.com/k3s-io/helm-controller"
+
+actions:
+  github:
+    kind: "github/pullrequest"
+    scmid: "rke2"
+    spec:
+      automerge: false
+      draft: false
+      mergemethod: squash
+      parent: false
+      title: "Update helm-controller dependency"
