@@ -1,0 +1,58 @@
+---
+name: "Bump Harvester CSI Driver version"
+scms:
+  rke2:
+    kind: "github"
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      username: "{{ requiredEnv .github.username }}"
+      token: "{{ requiredEnv .github.token }}"
+      owner: "{{ .rke2.org }}"
+      repository: "{{ .rke2.repo }}"
+      branch: "{{ .rke2.branch }}"
+      commitmessage:
+        title: "Bump Harvester CSI Driver version"
+
+actions:
+  github:
+    title: "Bump Harvester CSI Driver version"
+    kind: "github/pullrequest"
+    scmid: "rke2"
+    spec:
+      automerge: false
+      mergemethod: "squash"
+      usetitleforautomerge: true
+      parent: false
+      labels:
+        - "dependencies"
+
+sources:
+  harvester-csi-driver:
+    name: "Get Harvester CSI Driver latest release version"
+    kind: "githubrelease"
+    spec:
+      owner: "{{ .harvester_csi_driver.org }}"
+      repository: "{{ .harvester_csi_driver.repo }}"
+      token: "{{ requiredEnv .github.token }}"
+      versionfilter:
+        kind: "latest"
+
+conditions:
+  harvester-csi-driver:
+    name: "Check rancher/harvester-csi-driver image version in DockerHub"
+    kind: "dockerimage"
+    sourceid: "harvester-csi-driver"
+    spec:
+      image: "rancher/harvester-csi-driver"
+
+targets:
+  harvester-csi-driver:
+    name: "Update rancher/harvester-csi-driver image version"
+    kind: "file"
+    scmid: "rke2"
+    sourceid: "harvester-csi-driver"
+    spec:
+      file: "scripts/build-images"
+      matchpattern: 'rancher/harvester-csi-driver:v\d+\.\d+\.\d+(-\w+)?'
+      replacepattern: 'rancher/harvester-csi-driver:{{ source "harvester-csi-driver" }}'

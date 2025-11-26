@@ -1,0 +1,58 @@
+---
+name: "Bump Klipper LB version"
+scms:
+  rke2:
+    kind: "github"
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      username: "{{ requiredEnv .github.username }}"
+      token: "{{ requiredEnv .github.token }}"
+      owner: "{{ .rke2.org }}"
+      repository: "{{ .rke2.repo }}"
+      branch: "{{ .rke2.branch }}"
+      commitmessage:
+        title: "Bump Klipper LB version"
+
+actions:
+  github:
+    title: "Bump Klipper LB version"
+    kind: "github/pullrequest"
+    scmid: "rke2"
+    spec:
+      automerge: false
+      mergemethod: "squash"
+      usetitleforautomerge: true
+      parent: false
+      labels:
+        - "dependencies"
+
+sources:
+  klipper-lb:
+    name: "Get Klipper LB latest release version"
+    kind: "githubrelease"
+    spec:
+      owner: "{{ .klipper_lb.org }}"
+      repository: "{{ .klipper_lb.repo }}"
+      token: "{{ requiredEnv .github.token }}"
+      versionfilter:
+        kind: "latest"
+
+conditions:
+  klipper-lb:
+    name: "Check rancher/klipper-lb image version in DockerHub"
+    kind: "dockerimage"
+    sourceid: "klipper-lb"
+    spec:
+      image: "rancher/klipper-lb"
+
+targets:
+  klipper-lb:
+    name: "Update rancher/klipper-lb image version"
+    kind: "file"
+    scmid: "rke2"
+    sourceid: "klipper-lb"
+    spec:
+      file: "scripts/build-images"
+      matchpattern: 'rancher/klipper-lb:v\d+\.\d+\.\d+(-\w+)?'
+      replacepattern: 'rancher/klipper-lb:{{ source "klipper-lb" }}'

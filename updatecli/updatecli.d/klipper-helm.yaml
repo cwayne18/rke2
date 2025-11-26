@@ -1,0 +1,58 @@
+---
+name: "Bump Klipper Helm version"
+scms:
+  rke2:
+    kind: "github"
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      username: "{{ requiredEnv .github.username }}"
+      token: "{{ requiredEnv .github.token }}"
+      owner: "{{ .rke2.org }}"
+      repository: "{{ .rke2.repo }}"
+      branch: "{{ .rke2.branch }}"
+      commitmessage:
+        title: "Bump Klipper Helm version"
+
+actions:
+  github:
+    title: "Bump Klipper Helm version"
+    kind: "github/pullrequest"
+    scmid: "rke2"
+    spec:
+      automerge: false
+      mergemethod: "squash"
+      usetitleforautomerge: true
+      parent: false
+      labels:
+        - "dependencies"
+
+sources:
+  klipper-helm:
+    name: "Get Klipper Helm latest release version"
+    kind: "githubrelease"
+    spec:
+      owner: "{{ .klipper_helm.org }}"
+      repository: "{{ .klipper_helm.repo }}"
+      token: "{{ requiredEnv .github.token }}"
+      typefilter:
+        latest: true
+
+conditions:
+  klipper-helm:
+    name: "Check rancher/klipper-helm image version in DockerHub"
+    kind: "dockerimage"
+    sourceid: "klipper-helm"
+    spec:
+      image: "rancher/klipper-helm"
+
+targets:
+  klipper-helm:
+    name: "Update rancher/klipper-helm image version"
+    kind: "file"
+    scmid: "rke2"
+    sourceid: "klipper-helm"
+    spec:
+      file: "scripts/build-images"
+      matchpattern: 'rancher/klipper-helm:v[\d\.\-\w]+'
+      replacepattern: 'rancher/klipper-helm:{{ source "klipper-helm" }}'

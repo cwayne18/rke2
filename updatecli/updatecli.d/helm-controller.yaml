@@ -1,0 +1,69 @@
+---
+name: "Bump Helm Controller version"
+scms:
+  rke2:
+    kind: "github"
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      username: "{{ requiredEnv .github.username }}"
+      token: "{{ requiredEnv .github.token }}"
+      owner: "{{ .rke2.org }}"
+      repository: "{{ .rke2.repo }}"
+      branch: "{{ .rke2.branch }}"
+      commitmessage:
+        title: "Bump Helm Controller version"
+
+actions:
+  github:
+    title: "Bump Helm Controller version"
+    kind: "github/pullrequest"
+    scmid: "rke2"
+    spec:
+      automerge: false
+      mergemethod: "squash"
+      usetitleforautomerge: true
+      parent: false
+      labels:
+        - "dependencies"
+
+sources:
+  helm-controller:
+    name: "Get Helm Controller latest release version"
+    kind: "githubrelease"
+    spec:
+      owner: "{{ .helm_controller.org }}"
+      repository: "{{ .helm_controller.repo }}"
+      token: "{{ requiredEnv .github.token }}"
+      typefilter:
+        latest: true
+  get-pwd:
+    name: "Run Updatecli execution directory"
+    kind: "shell"
+    disablesourceinput: true
+    spec:
+      command: 'pwd'
+      environments:
+        - name: PATH
+
+conditions:
+  helm-controller:
+    name: "Check Helm Controller usage in go.mod"
+    kind: "file"
+    scmid: "rke2"
+    disablesourceinput: true
+    spec:
+      file: "go.mod"
+      matchpattern: 'github.com/k3s-io/helm-controller'
+
+targets:
+  go-mod:
+    name: "Run go mod update"
+    kind: "shell"
+    scmid: "rke2"
+    disablesourceinput: true
+    spec:
+      command: '{{ source "get-pwd" }}/updatecli/scripts/run-go-mod-update.sh github.com/k3s-io/helm-controller@{{ source "helm-controller" }}'
+      environments:
+        - name: PATH
+        - name: HOME

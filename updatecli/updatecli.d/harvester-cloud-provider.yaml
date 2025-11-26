@@ -1,0 +1,58 @@
+---
+name: "Bump Harvester Cloud Provider version"
+scms:
+  rke2:
+    kind: "github"
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      username: "{{ requiredEnv .github.username }}"
+      token: "{{ requiredEnv .github.token }}"
+      owner: "{{ .rke2.org }}"
+      repository: "{{ .rke2.repo }}"
+      branch: "{{ .rke2.branch }}"
+      commitmessage:
+        title: "Bump Harvester Cloud Provider version"
+
+actions:
+  github:
+    title: "Bump Harvester Cloud Provider version"
+    kind: "github/pullrequest"
+    scmid: "rke2"
+    spec:
+      automerge: false
+      mergemethod: "squash"
+      usetitleforautomerge: true
+      parent: false
+      labels:
+        - "dependencies"
+
+sources:
+  harvester-cloud-provider:
+    name: "Get Harvester Cloud Provider latest release version"
+    kind: "githubrelease"
+    spec:
+      owner: "{{ .harvester_cloud_provider.org }}"
+      repository: "{{ .harvester_cloud_provider.repo }}"
+      token: "{{ requiredEnv .github.token }}"
+      versionfilter:
+        kind: "latest"
+
+conditions:
+  harvester-cloud-provider:
+    name: "Check rancher/harvester-cloud-provider image version in DockerHub"
+    kind: "dockerimage"
+    sourceid: "harvester-cloud-provider"
+    spec:
+      image: "rancher/harvester-cloud-provider"
+
+targets:
+  harvester-cloud-provider:
+    name: "Update rancher/harvester-cloud-provider image version"
+    kind: "file"
+    scmid: "rke2"
+    sourceid: "harvester-cloud-provider"
+    spec:
+      file: "scripts/build-images"
+      matchpattern: 'rancher/harvester-cloud-provider:v\d+\.\d+\.\d+(-\w+)?'
+      replacepattern: 'rancher/harvester-cloud-provider:{{ source "harvester-cloud-provider" }}'
