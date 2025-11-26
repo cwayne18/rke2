@@ -35,8 +35,8 @@ sources:
       owner: "{{ .helm_controller.org }}"
       repository: "{{ .helm_controller.repo }}"
       token: "{{ requiredEnv .github.token }}"
-      typefilter:
-        latest: true
+      versionfilter:
+        kind: "latest"
   get-pwd:
     name: "Run Updatecli execution directory"
     kind: "shell"

@@ -35,8 +35,8 @@ sources:
       owner: "{{ .klipper_helm.org }}"
       repository: "{{ .klipper_helm.repo }}"
       token: "{{ requiredEnv .github.token }}"
-      typefilter:
-        latest: true
+      versionfilter:
+        kind: "latest"
 
 conditions:
   klipper-helm:
