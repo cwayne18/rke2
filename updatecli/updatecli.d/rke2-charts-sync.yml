@@ -9,7 +9,7 @@ scms:
       email: "{{ .github.email }}"
       username: "{{ requiredEnv .github.username }}"
       token: '{{ requiredEnv .github.token }}'
-      owner: rancher
+      owner: cwayne18
       repository: rke2
       branch: master
 
