@@ -59,7 +59,10 @@ Create backport pull requests for the following target branches, in this order:
    a. Check if the target branch exists: `git ls-remote --heads origin <branch>`. If the branch does not exist, skip it and note it in the final comment.
    b. Record the current HEAD SHA of the target branch **before** creating the backport branch: `BASE_COMMIT=$(git rev-parse origin/<target-branch>)`. This will be used as `base_commit` in the `create-pull-request` call so that the patch only contains the cherry-picked commit(s) and not unrelated divergence between branches.
    c. Create a new branch from the target branch: `git checkout -b backport/<pr-number>-to-<target-branch> origin/<target-branch>`
-   d. Cherry-pick the relevant commit(s) onto the new branch. If there are conflicts, abort the cherry-pick (`git cherry-pick --abort`), note the conflict in the summary, and move on to the next branch.
+   d. Cherry-pick the relevant commit(s) onto the new branch. If the cherry-pick exits with a non-zero status (conflicts detected):
+      - Run `scripts/resolve-backport-conflicts` to attempt automatic resolution of `scripts/build-images` conflicts.
+      - If the script succeeds, stage the resolved file (`git add scripts/build-images`) and continue the cherry-pick (`git cherry-pick --continue --no-edit`).
+      - If the script fails (conflicts exist in other files, or the auto-resolution cannot be applied), abort the cherry-pick (`git cherry-pick --abort`), note the conflict in the summary, and move on to the next branch.
    e. If the cherry-pick succeeds (no conflicts), push the branch to the remote using safe-outputs `create-pull-request` with:
       - `branch`: `backport/<pr-number>-to-<target-branch>`
       - `base`: `<target-branch>`
