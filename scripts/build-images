@@ -20,9 +20,9 @@ PULL_CMD="${PULL_CMD:-echo}"
 # When packaging images.txt, we use docker as rke2-runtime only exists locally
 PULL_CMD_CORE="${PULL_CMD_CORE:-docker image pull --quiet}"
 
-INGRESS_NGINX_TAG=v1.14.5-hardened1
+INGRESS_NGINX_TAG=v1.14.5-hardened2
 if [ "${REGISTRY}" != "docker.io" ]; then
-    INGRESS_NGINX_TAG=v1.14.5-prime1
+    INGRESS_NGINX_TAG=v1.14.5-prime3
 fi
 
 xargs -n1 -t $PULL_CMD_CORE << EOF >> $BUILD_DIR/images-core.txt
