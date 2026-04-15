@@ -57,14 +57,16 @@ Create backport pull requests for the following target branches, in this order:
 
 3. **For each target branch** (`release-1.35`, `release-1.34`, `release-1.33`, `release-1.32`):
    a. Check if the target branch exists: `git ls-remote --heads origin <branch>`. If the branch does not exist, skip it and note it in the final comment.
-   b. Create a new branch from the target branch: `git checkout -b backport/<pr-number>-to-<target-branch> origin/<target-branch>`
-   c. Cherry-pick the relevant commit(s) onto the new branch. If there are conflicts, abort the cherry-pick (`git cherry-pick --abort`), note the conflict in the summary, and move on to the next branch.
-   d. If the cherry-pick succeeds (no conflicts), push the branch to the remote using safe-outputs `create-pull-request` with:
+   b. Record the current HEAD SHA of the target branch **before** creating the backport branch: `BASE_COMMIT=$(git rev-parse origin/<target-branch>)`. This will be used as `base_commit` in the `create-pull-request` call so that the patch only contains the cherry-picked commit(s) and not unrelated divergence between branches.
+   c. Create a new branch from the target branch: `git checkout -b backport/<pr-number>-to-<target-branch> origin/<target-branch>`
+   d. Cherry-pick the relevant commit(s) onto the new branch. If there are conflicts, abort the cherry-pick (`git cherry-pick --abort`), note the conflict in the summary, and move on to the next branch.
+   e. If the cherry-pick succeeds (no conflicts), push the branch to the remote using safe-outputs `create-pull-request` with:
       - `branch`: `backport/<pr-number>-to-<target-branch>`
       - `base`: `<target-branch>`
+      - `base_commit`: the SHA captured in step 3b (`$BASE_COMMIT`) — **this is required** to limit the patch to only the cherry-picked changes
       - `title`: `[backport] <original PR title> to <target-branch>`
       - `body`: A description referencing the original PR, including "Backport of #<pr-number> to `<target-branch>`."
-   e. After creating the PR, also open a tracking GitHub issue using safe-outputs `create-issue` with:
+   f. After creating the PR, also open a tracking GitHub issue using safe-outputs `create-issue` with:
       - `title`: `[backport] <original PR title> to <target-branch>`
       - `body`: A description noting that a backport PR was opened, referencing the original PR number and the backport PR (if available). Include "Backport of #<pr-number> targeting `<target-branch>`."
 
