@@ -1,0 +1,125 @@
+#!/bin/bash
+# resolve-backport-conflicts - Resolve scripts/build-images conflicts during backport
+#
+# Usage: ./scripts/resolve-backport-conflicts [commit-sha]
+#
+# When backporting an image tag bump to a release branch, git cherry-pick often
+# fails because the surrounding context lines (other images' build dates) differ
+# between branches, even when the actual changed line is identical.  This script
+# extracts the intentional image tag changes from the cherry-pick commit and
+# applies them directly to scripts/build-images, keeping the release branch's
+# versions of every other image.
+#
+# The script runs automatically when .git/CHERRY_PICK_HEAD exists.  Pass a
+# commit SHA as the first argument to use it outside of an active cherry-pick.
+
+set -e
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BUILD_IMAGES="${ROOT}/scripts/build-images"
+
+if [ -f "${ROOT}/.git/CHERRY_PICK_HEAD" ]; then
+    CHERRY_PICK_COMMIT=$(cat "${ROOT}/.git/CHERRY_PICK_HEAD")
+elif [ -n "$1" ]; then
+    CHERRY_PICK_COMMIT="$1"
+else
+    echo "ERROR: No active cherry-pick found and no commit SHA provided." >&2
+    echo "Usage: $0 [commit-sha]" >&2
+    exit 1
+fi
+
+if ! grep -q "^<<<<<<< " "${BUILD_IMAGES}"; then
+    echo "No conflicts found in ${BUILD_IMAGES}, nothing to do." >&2
+    exit 0
+fi
+
+echo "Resolving build-images conflicts for cherry-pick of ${CHERRY_PICK_COMMIT} ..."
+
+python3 - "${BUILD_IMAGES}" "${ROOT}" "${CHERRY_PICK_COMMIT}" <<'PYEOF'
+import re
+import subprocess
+import sys
+
+build_images_path, repo_root, commit = sys.argv[1], sys.argv[2], sys.argv[3]
+
+diff = subprocess.check_output(
+    ["git", "-C", repo_root, "show", commit, "--", "scripts/build-images"],
+    text=True,
+)
+
+
+def image_name(line):
+    """Return the bare image name (e.g. 'hardened-etcd') from an image line."""
+    m = re.search(r"/rancher/([^:]+):", line)
+    return m.group(1) if m else None
+
+
+# Collect lines added and removed by the cherry-pick commit
+added, removed = {}, {}
+for line in diff.splitlines():
+    if line.startswith(("+++", "---")):
+        continue
+    if line.startswith("+"):
+        name = image_name(line)
+        if name:
+            added[name] = line[1:]  # strip leading '+'
+    elif line.startswith("-"):
+        name = image_name(line)
+        if name:
+            removed[name] = line[1:]  # strip leading '-'
+
+# Only images present in both diffs were intentionally changed
+intended = {name: added[name] for name in added if name in removed}
+
+if not intended:
+    print(
+        "ERROR: No intentional image changes detected in the cherry-pick commit.\n"
+        "       Cannot auto-resolve; please resolve the conflict manually.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+print(f"  Applying intentional change(s): {', '.join(intended)}", file=sys.stderr)
+
+# Parse the conflicted file and resolve each hunk
+with open(build_images_path) as f:
+    lines = f.readlines()
+
+resolved = []
+in_conflict = False
+ours = []
+theirs = []
+in_theirs = False
+
+for line in lines:
+    stripped = line.rstrip("\n")
+    if stripped.startswith("<<<<<<<"):
+        in_conflict, in_theirs, ours, theirs = True, False, [], []
+    elif stripped.startswith("=======") and in_conflict:
+        in_theirs = True
+    elif stripped.startswith(">>>>>>>") and in_conflict:
+        # Build a lookup of image-name → line for the incoming (theirs) side
+        theirs_by_name = {image_name(l): l for l in theirs if image_name(l)}
+        # Emit the ours side, swapping in intended changes from theirs
+        for l in ours:
+            name = image_name(l)
+            if name and name in intended and name in theirs_by_name:
+                resolved.append(theirs_by_name[name])
+            else:
+                resolved.append(l)
+        in_conflict, in_theirs, ours, theirs = False, False, [], []
+    elif in_conflict:
+        (theirs if in_theirs else ours).append(line)
+    else:
+        resolved.append(line)
+
+with open(build_images_path, "w") as f:
+    f.writelines(resolved)
+
+print(f"  Wrote resolved {build_images_path}", file=sys.stderr)
+PYEOF
+
+echo ""
+echo "Conflicts resolved. Run the following to complete the cherry-pick:"
+echo "  git add ${BUILD_IMAGES}"
+echo "  git cherry-pick --continue"
