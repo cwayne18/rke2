@@ -1,7 +1,7 @@
 #!/bin/bash
 # resolve-backport-conflicts - Resolve scripts/build-images conflicts during backport
 #
-# Usage: ./scripts/resolve-backport-conflicts [commit-sha]
+# Usage: ./scripts/resolve-backport-conflicts [commit-sha] [repo-path]
 #
 # When backporting an image tag bump to a release branch, git cherry-pick often
 # fails because the surrounding context lines (other images' build dates) differ
@@ -10,21 +10,32 @@
 # applies them directly to scripts/build-images, keeping the release branch's
 # versions of every other image.
 #
-# The script runs automatically when .git/CHERRY_PICK_HEAD exists.  Pass a
-# commit SHA as the first argument to use it outside of an active cherry-pick.
+# The script runs automatically when CHERRY_PICK_HEAD exists.  Pass a commit
+# SHA as the first argument to use it outside of an active cherry-pick.
+#
+# The optional second argument overrides the repo path, which is useful when
+# running the script from a different location (e.g. the main checkout) while
+# targeting a git worktree:
+#   ./scripts/resolve-backport-conflicts <sha> /tmp/backport-release-1.35
 
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Allow caller to override the repo root (e.g. when targeting a worktree)
+if [ -n "$2" ]; then
+    ROOT="$2"
+fi
 BUILD_IMAGES="${ROOT}/scripts/build-images"
 
-if [ -f "${ROOT}/.git/CHERRY_PICK_HEAD" ]; then
-    CHERRY_PICK_COMMIT=$(cat "${ROOT}/.git/CHERRY_PICK_HEAD")
+# Support both regular .git directories and git worktrees (where .git is a file)
+GIT_DIR=$(git -C "${ROOT}" rev-parse --git-dir 2>/dev/null)
+if [ -n "${GIT_DIR}" ] && [ -f "${GIT_DIR}/CHERRY_PICK_HEAD" ]; then
+    CHERRY_PICK_COMMIT=$(cat "${GIT_DIR}/CHERRY_PICK_HEAD")
 elif [ -n "$1" ]; then
     CHERRY_PICK_COMMIT="$1"
 else
     echo "ERROR: No active cherry-pick found and no commit SHA provided." >&2
-    echo "Usage: $0 [commit-sha]" >&2
+    echo "Usage: $0 [commit-sha] [repo-path]" >&2
     exit 1
 fi
 
