@@ -50,7 +50,7 @@ diff = subprocess.check_output(
 
 def image_name(line):
     """Return the bare image name (e.g. 'hardened-etcd') from an image line."""
-    m = re.search(r"/rancher/([^:]+):", line)
+    m = re.search(r"/rancher/([\w-]+):", line)
     return m.group(1) if m else None
 
 
@@ -82,8 +82,12 @@ if not intended:
 print(f"  Applying intentional change(s): {', '.join(intended)}", file=sys.stderr)
 
 # Parse the conflicted file and resolve each hunk
-with open(build_images_path) as f:
-    lines = f.readlines()
+try:
+    with open(build_images_path) as f:
+        lines = f.readlines()
+except OSError as e:
+    print(f"ERROR: Cannot read {build_images_path}: {e}", file=sys.stderr)
+    sys.exit(1)
 
 resolved = []
 in_conflict = False
@@ -93,13 +97,14 @@ in_theirs = False
 
 for line in lines:
     stripped = line.rstrip("\n")
-    if stripped.startswith("<<<<<<<"):
+    if stripped.startswith("<<<<<<< "):
         in_conflict, in_theirs, ours, theirs = True, False, [], []
-    elif stripped.startswith("=======") and in_conflict:
+    elif stripped == "=======" and in_conflict:
         in_theirs = True
-    elif stripped.startswith(">>>>>>>") and in_conflict:
-        # Build a lookup of image-name → line for the incoming (theirs) side
-        theirs_by_name = {image_name(l): l for l in theirs if image_name(l)}
+    elif stripped.startswith(">>>>>>> ") and in_conflict:
+        # Build a lookup of image-name → line for the incoming (theirs) side,
+        # computing image_name() once per line and excluding non-image lines.
+        theirs_by_name = {name: l for l in theirs if (name := image_name(l))}
         # Emit the ours side, swapping in intended changes from theirs
         for l in ours:
             name = image_name(l)
@@ -113,13 +118,20 @@ for line in lines:
     else:
         resolved.append(line)
 
-with open(build_images_path, "w") as f:
-    f.writelines(resolved)
+try:
+    with open(build_images_path, "w") as f:
+        f.writelines(resolved)
+except OSError as e:
+    print(f"ERROR: Cannot write {build_images_path}: {e}", file=sys.stderr)
+    sys.exit(1)
 
 print(f"  Wrote resolved {build_images_path}", file=sys.stderr)
 PYEOF
 
 echo ""
-echo "Conflicts resolved. Run the following to complete the cherry-pick:"
+echo "Conflicts resolved. Review the changes, then complete the cherry-pick:"
+echo "  git diff ${BUILD_IMAGES}"
 echo "  git add ${BUILD_IMAGES}"
 echo "  git cherry-pick --continue"
+echo ""
+echo "To abort instead: git cherry-pick --abort"
