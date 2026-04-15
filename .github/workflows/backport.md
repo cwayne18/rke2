@@ -27,7 +27,7 @@ safe-outputs:
 
 # Backport PR Creator
 
-A user has triggered the `/backport` slash command on pull request #${{ github.event.issue.number || github.event.pull_request.number }}${{ github.event.pull_request.number }} in the repository `${{ github.repository }}`.
+A user has triggered the `/backport` slash command on pull request #${{ github.event.issue.number || github.event.pull_request.number }} in the repository `${{ github.repository }}`.
 
 The full comment/text that triggered this workflow is:
 "${{ steps.sanitized.outputs.text }}"
