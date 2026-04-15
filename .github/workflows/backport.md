@@ -20,6 +20,10 @@ safe-outputs:
     draft: false
     max: 4
     preserve-branch-name: true
+  create-issue:
+    title-prefix: "[backport] "
+    labels: [backport]
+    max: 4
   add-comment:
     max: 1
     hide-older-comments: true
@@ -60,9 +64,12 @@ Create backport pull requests for the following target branches, in this order:
       - `base`: `<target-branch>`
       - `title`: `[backport] <original PR title> to <target-branch>`
       - `body`: A description referencing the original PR, including "Backport of #<pr-number> to `<target-branch>`."
+   e. After creating the PR, also open a tracking GitHub issue using safe-outputs `create-issue` with:
+      - `title`: `[backport] <original PR title> to <target-branch>`
+      - `body`: A description noting that a backport PR was opened, referencing the original PR number and the backport PR (if available). Include "Backport of #<pr-number> targeting `<target-branch>`."
 
 4. **Post a summary comment** on the original PR using `add-comment` listing:
-   - Which branches received a backport PR (with PR links if available)
+   - Which branches received a backport PR and tracking issue (with links if available)
    - Which branches were skipped because they don't exist
    - Which branches had cherry-pick conflicts (with advice to resolve manually)
 
