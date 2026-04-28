@@ -17,6 +17,10 @@ tools:
 safe-outputs:
   create-pull-request:
     max: 3
+    allowed-base-branches:
+      - release-1.33
+      - release-1.34
+      - release-1.35
   noop: false
 ---
 
