@@ -65,10 +65,24 @@ For each file changed in the merged PR, extract the precise version strings that
 
 For each of the active release branches — `release-1.35`, `release-1.34`, `release-1.33` — create a pull request that applies the same version bump changes.
 
+> **CRITICAL — avoid large diffs:**
+> The release branches may have diverged significantly from `master`. You **MUST NOT** create a branch from `master` and target the release branch, as this will produce a PR containing hundreds of unrelated files and will be rejected with an error (`E003: Cannot create pull request with more than 100 files`).
+> Instead, follow the steps below precisely.
+
+For each release branch, follow this exact procedure:
+
+1. **Verify the branch exists.** Use `get_branch` to check each specific branch name directly — do **not** use `list_branches`, as it is paginated and may not return all branches. If a branch does not exist, skip it without error.
+
+2. **Create a new working branch FROM the release branch.** The new branch must be based on the tip of the release branch (e.g., `backport/release-1.35/<original-pr-number>`), **not** on `master` or any other branch.
+
+3. **Read the current content of only the files that were changed in the original PR** from the release branch (not from master). For each such file, apply only the specific version string changes identified in Step 2 (old value → new value). Do **not** modify any other files.
+
+4. **Commit only those changed files** to the working branch. The commit should contain the same number of files as the original PR — typically just a handful. If a version string from the original PR does not appear in a file on the release branch, skip that substitution for that file (the version may already differ on that branch).
+
+5. **Open a PR** from the working branch into the release branch (not into `master`).
+
 Each backport PR should:
 - **Title:** `[backport release-1.XX] <original PR title>`
 - **Body:** Include a reference to the original PR (e.g., "Backport of #<PR number>"), the list of version changes being applied, and any relevant context from the original PR description.
 - **Base branch:** The respective release branch (`release-1.35`, `release-1.34`, or `release-1.33`)
-- **Changes:** Apply the same file modifications as the original PR — update the same version variables/fields to the same new values
-
-When creating each backport PR, verify that the target release branch exists before attempting to create a PR against it. Use `get_branch` to check each specific branch name directly — do **not** use `list_branches`, as it is paginated and may not return all branches. If a branch does not exist, skip it without error.
+- **Changed files:** Only the files that were modified in the original version bump PR — **never** a full branch diff. The backport PR must not contain more files than the original PR.
