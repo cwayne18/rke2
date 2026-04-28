@@ -8,6 +8,7 @@ if: ${{ github.event.pull_request.merged == true && github.event.pull_request.ba
 permissions:
   contents: read
   pull-requests: read
+  issues: read
 
 tools:
   github:
@@ -16,7 +17,7 @@ tools:
 safe-outputs:
   create-pull-request:
     max: 3
-  noop: true
+  noop: false
 ---
 
 # Version Bump Backport Agent
