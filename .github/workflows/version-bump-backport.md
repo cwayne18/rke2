@@ -67,4 +67,4 @@ Each backport PR should:
 - **Base branch:** The respective release branch (`release-1.35`, `release-1.34`, or `release-1.33`)
 - **Changes:** Apply the same file modifications as the original PR — update the same version variables/fields to the same new values
 
-When creating each backport PR, verify that the target release branch exists before attempting to create a PR against it. If a branch does not exist, skip it without error.
+When creating each backport PR, verify that the target release branch exists before attempting to create a PR against it. Use `get_branch` to check each specific branch name directly — do **not** use `list_branches`, as it is paginated and may not return all branches. If a branch does not exist, skip it without error.
