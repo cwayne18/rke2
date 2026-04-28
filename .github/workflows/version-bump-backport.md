@@ -39,7 +39,7 @@ Fetch details about the merged PR, including:
 - The diff of those files
 
 **A PR qualifies as a version bump if ANY of the following is true:**
-- The PR was opened by `updatecli[bot]` or has a label containing `updatecli` (case-insensitive)
+- The PR was opened by `updatecli[bot]` or has a label containing `updateCLI` (case-insensitive)
 - The PR only modifies version-related files and the changes are version string updates. Version-related files include:
   - `scripts/version.sh` — contains variables like `KUBERNETES_VERSION`, `KUBERNETES_IMAGE_TAG`, `ETCD_VERSION`, `CCM_VERSION`, `KLIPPERHELM_VERSION`, etc.
   - `Dockerfile` or `Dockerfile.windows` — contains `ARG` or `FROM` lines with image tags/versions
