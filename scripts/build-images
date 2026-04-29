@@ -34,7 +34,7 @@ fi
 
 xargs -n1 -t $PULL_CMD_CORE << EOF >> $BUILD_DIR/images-core.txt
     ${REGISTRY}/rancher/hardened-kubernetes:${KUBERNETES_IMAGE_TAG}
-    ${REGISTRY}/rancher/hardened-coredns:v1.14.3-build20260417
+    ${REGISTRY}/rancher/hardened-coredns:v1.14.2-build20260416
     ${REGISTRY}/rancher/hardened-cluster-autoscaler:v1.10.3-build20260414
     ${REGISTRY}/rancher/hardened-dns-node-cache:1.26.8-build20260416
     ${REGISTRY}/rancher/hardened-etcd:${ETCD_VERSION}-build20260415
@@ -44,8 +44,8 @@ xargs -n1 -t $PULL_CMD_CORE << EOF >> $BUILD_DIR/images-core.txt
     ${REGISTRY}/rancher/klipper-lb:v0.4.16
     ${REGISTRY}/rancher/mirrored-pause:${PAUSE_VERSION}
     ${REGISTRY}/rancher/rke2-cloud-provider:${CCM_VERSION}
-    ${REGISTRY}/rancher/hardened-snapshot-controller:v8.6.0-build20260410
-    ${REGISTRY}/rancher/hardened-traefik:v3.6.14-build20260416
+    ${REGISTRY}/rancher/hardened-snapshot-controller:v8.5.0-build20260410
+    ${REGISTRY}/rancher/hardened-traefik:v3.6.13-build20260416
 EOF
 
 xargs -n1 -t $PULL_CMD << EOF > $BUILD_DIR/images-ingress-nginx.txt
