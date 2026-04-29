@@ -1,9 +1,8 @@
 ---
 on:
-  pull_request:
-    types: [closed]
+  workflow_dispatch:
 
-if: ${{ github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'master' }}
+if: false
 
 permissions:
   contents: read
