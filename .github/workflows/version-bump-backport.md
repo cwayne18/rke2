@@ -20,6 +20,9 @@ tools:
   github:
     toolsets: [default]
 
+concurrency:
+  group: "gh-aw-${{ github.workflow }}-${{ inputs.target_branch }}"
+
 safe-outputs:
   create-pull-request:
     max: 1

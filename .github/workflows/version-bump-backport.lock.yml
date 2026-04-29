@@ -67,7 +67,7 @@ name: "Version Bump Backport Agent"
 permissions: {}
 
 concurrency:
-  group: "gh-aw-${{ github.workflow }}"
+  group: "gh-aw-${{ github.workflow }}-${{ inputs.target_branch }}"
 
 run-name: "Version Bump Backport Agent"
 
