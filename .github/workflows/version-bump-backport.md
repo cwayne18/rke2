@@ -1,8 +1,10 @@
 ---
 on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
   workflow_dispatch:
-
-if: "false"
 
 permissions:
   contents: read
