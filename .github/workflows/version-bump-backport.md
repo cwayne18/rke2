@@ -99,4 +99,4 @@ The backport PR should:
 - **Base branch:** `${{ inputs.target_branch }}`
 - **Changes:** For each file that was modified in the original PR, provide the file content read from `${{ inputs.target_branch }}` with only the version string changes applied. Do NOT include any files that differ between master and the release branch but were not part of the original PR.
 
-Before creating the PR, verify that `${{ inputs.target_branch }}` exists. Use `get_branch` to check the branch name directly. If the branch does not exist, output a `noop` and stop.
+Before creating the PR, verify that `${{ inputs.target_branch }}` exists. Use `list_branches` to retrieve the list of branches and confirm that `${{ inputs.target_branch }}` appears in the results. If the branch does not exist, output a `noop` and stop.
