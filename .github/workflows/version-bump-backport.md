@@ -1,10 +1,15 @@
 ---
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - master
   workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "Target release branch for backport (e.g., release-1.35)"
+        required: true
+        type: string
+      pr_number:
+        description: "PR number that was merged into master"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,7 +22,7 @@ tools:
 
 safe-outputs:
   create-pull-request:
-    max: 3
+    max: 1
     allowed-base-branches:
       - release-1.33
       - release-1.34
@@ -27,18 +32,21 @@ safe-outputs:
 
 # Version Bump Backport Agent
 
-You are an agent that automatically backports version bump changes from `master` to active release branches.
+You are an agent that automatically backports version bump changes from `master` to a single target release branch.
 
 ## Your Task
 
-A PR was just merged into `master`. You need to:
+A PR was merged into `master`. You need to:
 
 1. Determine if the merged PR is a version bump
-2. If it is, create backport PRs to the active release branches
+2. If it is, create **exactly one** backport PR targeting `${{ inputs.target_branch }}`
+
+The PR to backport is **#${{ inputs.pr_number }}**.
+The target release branch is **${{ inputs.target_branch }}**.
 
 ## Step 1: Analyze the Merged PR
 
-Fetch details about the merged PR, including:
+Fetch details about PR **#${{ inputs.pr_number }}**, including:
 - The PR author (login)
 - The PR labels
 - The list of files changed
@@ -62,33 +70,30 @@ For each file changed in the merged PR, extract the precise version strings that
 - What the old version strings were
 - What the new version strings are
 
-## Step 3: Create Backport PRs
+## Step 3: Create the Backport PR
 
-For each of the active release branches — `release-1.35`, `release-1.34`, `release-1.33` — create a pull request that applies the same version bump changes.
+Create **exactly one** pull request targeting **`${{ inputs.target_branch }}`**.
 
-### Critical: How to Create Each Backport PR
+### Critical: How to Create the Backport PR
 
 **DO NOT create a branch from master and target a release branch — this will include hundreds of unrelated files from the divergence between master and the release branch.**
 
-**Each backport PR MUST be created independently with a completely clean set of files. Do NOT carry over or reuse any file content, changes, or state from a previously created backport PR.**
+You MUST follow this exact process:
 
-For each target release branch, you MUST follow this exact process:
-
-1. **Start fresh.** Before creating each backport PR, discard all file content gathered for any previous backport PR. Each PR must be built from scratch using only files fetched directly from that specific release branch.
-2. Use `get_file_contents` to read each changed file **from the target release branch** (not from master). Pass the release branch name (e.g., `release-1.34`) as the `ref` parameter.
-3. Apply ONLY the version string substitutions identified in Step 2 to that file content.
-4. When calling `create_pull_request`, set the `base` to the target release branch (e.g., `release-1.34`). The content of every file in the `changes` field MUST be the release-branch content with only the version bump applied — never content sourced from master.
-5. The PR branch name should be something like `backport-<original-pr-number>-release-1.XX`.
-6. Include ONLY the files that were changed in the original PR, fetched fresh from this branch's `get_file_contents` call. The resulting PR must have the same number of files (or fewer) as the original merged PR.
+1. Use `get_file_contents` to read each changed file **from `${{ inputs.target_branch }}`** (not from master). Pass `${{ inputs.target_branch }}` as the `ref` parameter.
+2. Apply ONLY the version string substitutions identified in Step 2 to that file content.
+3. When calling `create_pull_request`, set the `base` to `${{ inputs.target_branch }}`. The content of every file in the `changes` field MUST be the release-branch content with only the version bump applied — never content sourced from master.
+4. The PR branch name should be `backport-${{ inputs.pr_number }}-${{ inputs.target_branch }}`.
+5. Include ONLY the files that were changed in the original PR, fetched fresh from `get_file_contents`. The resulting PR must have the same number of files (or fewer) as the original merged PR.
 
 **If the `create_pull_request` call would include more than 10 files, STOP and re-evaluate — version bump backports should typically touch 1-5 files.**
 
-If a file from the original PR does not exist on the target release branch, skip it for that branch and note it in the PR body.
+If a file from the original PR does not exist on `${{ inputs.target_branch }}`, skip it and note it in the PR body.
 
-Each backport PR should:
-- **Title:** `[backport release-1.XX] <original PR title>`
-- **Body:** Include a reference to the original PR (e.g., "Backport of #<PR number>"), the list of version changes being applied, and any relevant context from the original PR description.
-- **Base branch:** The respective release branch (`release-1.35`, `release-1.34`, or `release-1.33`)
-- **Changes:** For each file that was modified in the original PR, provide the file content read from the target release branch with only the version string changes applied. Do NOT include any files that differ between master and the release branch but were not part of the original PR.
+The backport PR should:
+- **Title:** `[backport ${{ inputs.target_branch }}] <original PR title>`
+- **Body:** Include a reference to the original PR (e.g., "Backport of #${{ inputs.pr_number }}"), the list of version changes being applied, and any relevant context from the original PR description.
+- **Base branch:** `${{ inputs.target_branch }}`
+- **Changes:** For each file that was modified in the original PR, provide the file content read from `${{ inputs.target_branch }}` with only the version string changes applied. Do NOT include any files that differ between master and the release branch but were not part of the original PR.
 
-When creating each backport PR, verify that the target release branch exists before attempting to create a PR against it. Use `get_branch` to check each specific branch name directly — do **not** use `list_branches`, as it is paginated and may not return all branches. If a branch does not exist, skip it without error.
+Before creating the PR, verify that `${{ inputs.target_branch }}` exists. Use `get_branch` to check the branch name directly. If the branch does not exist, output a `noop` and stop.
