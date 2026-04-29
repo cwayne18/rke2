@@ -70,13 +70,16 @@ For each of the active release branches — `release-1.35`, `release-1.34`, `rel
 
 **DO NOT create a branch from master and target a release branch — this will include hundreds of unrelated files from the divergence between master and the release branch.**
 
+**Each backport PR MUST be created independently with a completely clean set of files. Do NOT carry over or reuse any file content, changes, or state from a previously created backport PR.**
+
 For each target release branch, you MUST follow this exact process:
 
-1. Use `get_file_contents` to read each changed file **from the target release branch** (not from master). Pass the release branch name (e.g., `release-1.34`) as the `ref` parameter.
-2. Apply ONLY the version string substitutions identified in Step 2 to that file content.
-3. When calling `create_pull_request`, set the `base` to the target release branch (e.g., `release-1.34`). The content of every file in the `changes` field MUST be the release-branch content with only the version bump applied — never content sourced from master.
-4. The PR branch name should be something like `backport-<original-pr-number>-release-1.XX`.
-5. Include ONLY the files that were changed in the original PR. The resulting PR must have the same number of files (or fewer) as the original merged PR.
+1. **Start fresh.** Before creating each backport PR, discard all file content gathered for any previous backport PR. Each PR must be built from scratch using only files fetched directly from that specific release branch.
+2. Use `get_file_contents` to read each changed file **from the target release branch** (not from master). Pass the release branch name (e.g., `release-1.34`) as the `ref` parameter.
+3. Apply ONLY the version string substitutions identified in Step 2 to that file content.
+4. When calling `create_pull_request`, set the `base` to the target release branch (e.g., `release-1.34`). The content of every file in the `changes` field MUST be the release-branch content with only the version bump applied — never content sourced from master.
+5. The PR branch name should be something like `backport-<original-pr-number>-release-1.XX`.
+6. Include ONLY the files that were changed in the original PR, fetched fresh from this branch's `get_file_contents` call. The resulting PR must have the same number of files (or fewer) as the original merged PR.
 
 **If the `create_pull_request` call would include more than 10 files, STOP and re-evaluate — version bump backports should typically touch 1-5 files.**
 
