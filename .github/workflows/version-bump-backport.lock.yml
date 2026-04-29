@@ -48,6 +48,10 @@
 
 name: "Version Bump Backport Agent"
 "on":
+  pull_request:
+    types: [closed]
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       aw_context:
@@ -65,7 +69,7 @@ run-name: "Version Bump Backport Agent"
 
 jobs:
   activation:
-    if: false
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-slim
     permissions:
       actions: read
