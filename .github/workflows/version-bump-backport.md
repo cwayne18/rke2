@@ -2,7 +2,7 @@
 on:
   workflow_dispatch:
 
-if: false
+if: "false"
 
 permissions:
   contents: read
