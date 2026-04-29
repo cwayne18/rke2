@@ -106,14 +106,13 @@ jobs:
             git push origin "$BACKPORT_BRANCH"
 
             # Create the pull request
+            PR_BODY="Backport of #${PR_NUMBER} to \`${RELEASE_BRANCH}\`."$'\n\n'"Automated cherry-pick of merge commit \`${MERGE_SHA}\`."
             gh pr create \
               --repo "$GITHUB_REPOSITORY" \
               --base "$RELEASE_BRANCH" \
               --head "$BACKPORT_BRANCH" \
               --title "[backport ${RELEASE_BRANCH}] ${PR_TITLE}" \
-              --body "Backport of #${PR_NUMBER} to \`${RELEASE_BRANCH}\`.
-
-Automated cherry-pick of merge commit \`${MERGE_SHA}\`."
+              --body "$PR_BODY"
 
             echo "Created backport PR for $RELEASE_BRANCH"
             git checkout -
