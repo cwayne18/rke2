@@ -150,9 +150,12 @@ update_chart_images() {
         AIRGAP_BLOCK_START=${AIRGAP_BLOCK_BOUNDS% *}
         AIRGAP_BLOCK_END=${AIRGAP_BLOCK_BOUNDS#* }
         while IFS= read -r line ; do 
-            if grep "repo" <<< ${line} &> /dev/null; then
+            if grep -q "repo" <<<"${line}"; then
               image=${line#*: }
-              tag_line=$(echo "${IMAGES_TAG}" | grep -A1 ${image} 2>&1| sed -n '2 p' | tr -d " ")
+              tag_line=$(printf '%s\n' "${IMAGES_TAG}" | grep -F -m1 -A1 -- "repo: ${image}" | sed -n '2 p' | tr -d " ")
+              if [ -z "${tag_line}" ]; then
+                fatal "unable to determine tag for image ${image} from chart values"
+              fi
               tag=${tag_line#*:}
               # Restrict the lookup and the edit to this chart's airgap block so
               # shared sidecar images in other blocks keep their own versions.
