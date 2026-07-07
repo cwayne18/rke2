@@ -30,6 +30,7 @@ var (
 			return strings.ReplaceAll(s, "\\", "\\\\")
 		},
 	}
+	commaWhitespaceRegex = regexp.MustCompile(`\s*,\s*`)
 )
 
 type networkProvider interface {
@@ -267,7 +268,7 @@ func setMetaDataServerRoute(mgmt string) error {
 // findInterfaceRegEx finds the interface that matches the regex
 func findInterfaceRegEx(expression string) (string, error) {
 	// We remove any whitespace character
-	ifRegexes := regexp.MustCompile(`\s*,\s*`).Split(expression, -1)
+	ifRegexes := commaWhitespaceRegex.Split(expression, -1)
 
 	// Prepare the regex expression (e.g. (eth.?)|( wlan0)|( docker*))
 	includeRegexes, err := regexp.Compile("(" + strings.Join(ifRegexes, ")|(") + ")")
@@ -312,12 +313,13 @@ func findInterfaceReach(dest string) (string, error) {
 func findInterfaceCIDR(cidrs []string) (string, error) {
 	var foundIf string
 
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+
 	for _, cidr := range cidrs {
 		_, network, err := net.ParseCIDR(cidr)
-		if err != nil {
-			return "", err
-		}
-		interfaces, err := net.Interfaces()
 		if err != nil {
 			return "", err
 		}
