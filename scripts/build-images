@@ -115,6 +115,25 @@ xargs -n1 -t $PULL_CMD << EOF > $BUILD_DIR/images-vsphere.txt
 EOF
 fi
 
+# Rancher Prime ships the hardened rancher/hardened-* vsphere CPI/CSI images
+# (see rancher/vsphere-charts#126). They are only pulled for a Prime registry,
+# so gate this block on a non-docker.io REGISTRY, mirroring the ingress-nginx
+# prime handling above. Tags here are kept in sync with the charts'
+# primeRepository/primeTag values by updatecli/scripts/update_chart_and_images.sh.
+if [ "${GOARCH}" != "arm64" ] && [ "${REGISTRY}" != "docker.io" ]; then
+xargs -n1 -t $PULL_CMD << EOF > $BUILD_DIR/images-vsphere-prime.txt
+    ${REGISTRY}/rancher/hardened-cloud-provider-vsphere:v1.36.0-build20260702
+    ${REGISTRY}/rancher/hardened-vsphere-csi-driver:v3.7.2-build20260702
+    ${REGISTRY}/rancher/hardened-vsphere-csi-syncer:v3.7.2-build20260702
+    ${REGISTRY}/rancher/hardened-csi-node-driver-registrar:v2.17.0-build20260702
+    ${REGISTRY}/rancher/hardened-csi-resizer:v2.2.1-build20260702
+    ${REGISTRY}/rancher/hardened-livenessprobe:v2.19.0-build20260706
+    ${REGISTRY}/rancher/hardened-csi-attacher:v4.12.0-build20260702
+    ${REGISTRY}/rancher/hardened-csi-provisioner:v6.3.0-build20260702
+    ${REGISTRY}/rancher/hardened-csi-snapshotter:v8.6.0-build20260702
+EOF
+fi
+
 xargs -n1 -t $PULL_CMD << EOF > $BUILD_DIR/images-multus.txt
     ${REGISTRY}/rancher/hardened-multus-cni:v4.2.4-build20260310
     ${REGISTRY}/rancher/hardened-multus-thick:v4.2.4-build20260310
