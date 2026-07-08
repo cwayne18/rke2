@@ -1,7 +1,6 @@
 package images
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -80,7 +79,7 @@ func Test_UnitPull(t *testing.T) {
 				}
 				a.dir, err = os.MkdirTemp("", "*")
 				tempImage := a.dir + "/" + a.name + ".image"
-				ioutil.WriteFile(tempImage, []byte(a.image.Name()+"\n"), 0644)
+				os.WriteFile(tempImage, []byte(a.image.Name()+"\n"), 0644)
 				return err
 			},
 			teardown: func(a *args) error {
