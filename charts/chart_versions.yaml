@@ -1,60 +1,60 @@
 charts:
-  - version: 1.19.402
+  - version: 1.19.601
     filename: /charts/rke2-cilium.yaml
     bootstrap: true
-  - version: v3.32.0-build2026060401
+  - version: v3.32.1-build2026071700
     filename: /charts/rke2-canal.yaml
     bootstrap: true
-  - version: v3.32.003
+  - version: v3.32.100
     filename: /charts/rke2-calico.yaml
     bootstrap: true
-  - version: v3.32.003
+  - version: v3.32.100
     filename: /charts/rke2-calico-crd.yaml
     bootstrap: true
     package: rke2-calico-crd
-  - version: 1.46.002
+  - version: 1.46.201
     filename: /charts/rke2-coredns.yaml
     bootstrap: true
-  - version: 4.15.101
+  - version: 4.15.106
     filename: /charts/rke2-ingress-nginx.yaml
     bootstrap: false
-  - version: 40.1.003
+  - version: 40.1.009
     filename: /charts/rke2-traefik.yaml
     bootstrap: false
-  - version: 40.1.003
+  - version: 40.1.009
     filename: /charts/rke2-traefik-crd.yaml
     bootstrap: false
-  - version: 3.13.100
+  - version: 3.13.105
     filename: /charts/rke2-metrics-server.yaml
     bootstrap: false
-  - version: v4.2.418
+  - version: v4.3.006
     filename: /charts/rke2-multus.yaml
     bootstrap: false
-  - version: v0.28.502
+  - version: v0.28.704
     filename: /charts/rke2-flannel.yaml
     bootstrap: true
-  - version: 1.14.000
+  - version: 1.15.200
     filename: /charts/rancher-vsphere-cpi.yaml
     bootstrap: true
-  - version: 3.7.0-rancher100
+  - version: 3.7.2-rancher300
     filename: /charts/rancher-vsphere-csi.yaml
     bootstrap: true
-  - version: 0.2.1100
+  - version: 0.2.1400
     filename: /charts/harvester-cloud-provider.yaml
     bootstrap: true
-  - version: 0.1.2800
+  - version: 0.1.3000
     filename: /charts/harvester-csi-driver.yaml
     bootstrap: true
   - version: 4.15.000
     filename: /charts/rke2-ovirt-csi-driver.yaml
     bootstrap: true
-  - version: 4.2.006
+  - version: 4.2.008
     filename: /charts/rke2-snapshot-controller.yaml
     bootstrap: false
-  - version: 4.2.006
+  - version: 4.2.008
     filename: /charts/rke2-snapshot-controller-crd.yaml
     bootstrap: false
-  - version: 0.0.0  # this empty chart addon can be removed in v1.34, after we have shipped two minor versions that have never included it.
+  - version: 0.0.0 # this empty chart addon can be removed in v1.34, after we have shipped two minor versions that have never included it.
     filename: /charts/rke2-snapshot-validation-webhook.yaml
     bootstrap: false
   - version: 0.1.000
